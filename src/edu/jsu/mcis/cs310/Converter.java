@@ -2,6 +2,9 @@ package edu.jsu.mcis.cs310;
 
 import com.github.cliftonlabs.json_simple.*;
 import com.opencsv.*;
+import com.opencsv.exceptions.CsvException;
+import java.util.*;
+import java.io.*;
 
 public class Converter {
     
@@ -72,39 +75,110 @@ public class Converter {
     */
     
     @SuppressWarnings("unchecked")
-    public static String csvToJson(String csvString) {
-        
-        String result = "{}"; // default return value; replace later!
-        
-        try {
-        
-            // INSERT YOUR CODE HERE
-            
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return result.trim();
-        
-    }
-    
-    @SuppressWarnings("unchecked")
-    public static String jsonToCsv(String jsonString) {
+    public static String csvToJson(String csvString) throws IOException, CsvException {
         
         String result = ""; // default return value; replace later!
-        
-        try {
-            
-            // INSERT YOUR CODE HERE
+
+         StringBuilder csvBuilder = new StringBuilder();
+         
+        try 
+        {
+            BufferedReader reader = new BufferedReader(new FileReader("input.csv"));
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                csvBuilder.append(line).append("\n");
+            }
             
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+                
+        String aCsvString = csvBuilder.toString().trim();
         
-        return result.trim();
+        CSVReader reader = new CSVReader(new StringReader(aCsvString));
+
         
+            List <String[]> full = reader.readAll(); 
+            Iterator<String[]> iterator = full.iterator();
+        
+            String[] line = iterator.next();
+            
+            JsonArray records = new JsonArray();
+            
+            if (iterator.hasNext())
+               {
+                   String[] headings = iterator.next();
+                   while (iterator.hasNext())
+                   {
+                       String[] csvRecord = iterator.next();
+                       JsonObject jsonRecord = new JsonObject();
+                       for (int o = 0; o < headings.length; ++o)
+                       {
+                           jsonRecord.put(headings[o].toLowerCase(), csvRecord[o]);
+                       }
+                       records.add(jsonRecord);
+                   }
+               }
+            
+            String jsonString = Jsoner.serialize(records);
+            
+            result = jsonString;
+            
+            return result.trim();
     }
     
+@SuppressWarnings("unchecked")
+    public static String jsonToCsv(String jsonString) 
+    {
+        String result = ""; // default return value; replace later!
+
+        
+        JsonObject jsonObject = Jsoner.deserialize(jsonString, new JsonObject());
+
+        int size = jsonObject.size();
+        int counter = 0;
+    
+        StringWriter writer = new StringWriter();
+        CSVWriter csvWriter = new CSVWriter(writer, ',', '"', '\\', "\n");
+
+        Object ProdNumsValues = jsonObject.get("ProdNums");
+        String ProdNums = ProdNumsValues.toString();
+            Object TitleValues = jsonObject.get("Title");
+            String Titles = TitleValues.toString();
+            Object SeasonValues = jsonObject.get("Season");
+            String Season = ProdNumsValues.toString();
+            Object EpisodeValues = jsonObject.get("Episode");
+            String Episode = TitleValues.toString();
+            Object StarDateValues = jsonObject.get("StarDate");
+            String StarDate = ProdNumsValues.toString();
+            Object OADValues = jsonObject.get("OriginalAirdate");
+            String OAD = TitleValues.toString();
+            Object RADValues = jsonObject.get("RemasteredAirdate");
+            String RAD = TitleValues.toString();
+            Object ColHeadingsValues = jsonObject.get("ColHeadings");
+            String ColumnHeadings = ColHeadingsValues.toString();
+            
+            Set<String> keys = jsonObject.keySet();
+            String[] columns = ColumnHeadings.split("");
+            csvWriter.writeNext(columns);
+            
+            //Get column headers in a list
+            //Print first ProdNum, Title, Season, Episode, SD, OAD, and Rad on first line 
+            //Print second of each on second line and so on until the end of the file
+            //Write it all with a CSVWriter to format it and return it as result var
+        
+            
+            result = writer.toString();
+        try 
+        {
+            
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result.trim();
+    }
 }
